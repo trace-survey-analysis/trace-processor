@@ -1,0 +1,5 @@
+google-cloud-storage==2.13.0
+confluent-kafka==2.9.0
+pymupdf==1.25.5
+pydantic==2.11.3
+python-dateutil==2.9.0
