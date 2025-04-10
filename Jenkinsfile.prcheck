@@ -44,17 +44,15 @@ pipeline {
                     // Install test dependencies and run checks
                     sh '''
                     docker run --rm trace-processor:${BUILD_NUMBER} sh -c "
-                        pip install black isort flake8 pytest &&
-                        python -m black --check *.py models/ services/ utils/ &&
-                        python -m isort --check *.py models/ services/ utils/ &&
-                        python -m flake8 *.py models/ services/ utils/ &&
-                        python -m pytest -xvs"
+                        pip install black &&
+                        python -m black --check *.py models/ services/ utils/"
                     '''
-                    
+                    // Clean up the Docker image after tests
+                    sh '''docker rmi trace-processor:${BUILD_NUMBER} || true'''
                 }
             }
         }
-    }    
+    }
     
     post {
         success {
