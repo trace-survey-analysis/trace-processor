@@ -7,6 +7,7 @@ import threading
 from config import load_config
 from utils.logging import get_logger
 from services.gcs_service import GCSClient
+from services.healthcheck import HealthCheckServer
 from services.kafka_service import KafkaConsumer, KafkaProducer
 from processor import SurveyProcessor
 
@@ -23,6 +24,18 @@ def main():
         logger.info("Configuration loaded successfully")
     except Exception as e:
         logger.fatal("Failed to load configuration", e)
+
+    # Start health check server
+    try:
+        server_port = int(config.server_port)
+        health_server = HealthCheckServer(server_port, logger)
+        health_server.start()
+        # Initially set to not ready
+        health_server.set_ready(False)
+        logger.info(f"Health check server started on port {server_port}")
+    except Exception as e:
+        logger.error(f"Failed to start health check server: {str(e)}", e)
+        # Continue without health checks - won't affect core functionality
 
     # Initialize GCS client
     try:
@@ -86,6 +99,12 @@ def main():
     consumer_thread.start()
     logger.info("Kafka consumer started")
 
+    # Initialized, mark as ready for K8s probes
+    try:
+        health_server.set_ready(True)
+    except Exception:
+        pass
+
     # Wait for shutdown signal
     shutdown_event.wait()
 
@@ -103,6 +122,13 @@ def main():
         # Close the producer
         logger.info("Closing Kafka producer...")
         producer.close()
+
+        # Stop health check server
+        try:
+            logger.info("Stopping health check server...")
+            health_server.stop()
+        except Exception as e:
+            logger.error(f"Error stopping health check server: {str(e)}", e)
 
         logger.info("Shutdown complete")
     except Exception as e:

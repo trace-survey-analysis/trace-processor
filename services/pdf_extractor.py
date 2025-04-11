@@ -134,7 +134,7 @@ class PDFExtractor:
         responses_match = re.search(r"Responses\s*Incl\s*Declines:\s*(\d+)", full_text)
         responses = int(responses_match.group(1)) if responses_match else 0
 
-        declines_match = re.search(r"Declines:\s*(\d+)", full_text)
+        declines_match = re.search(r"(?<!Incl )Declines:\s*(\d+)", full_text)
         declines = (
             int(declines_match.group(1)) if declines_match else 1
         )  # Default to 1 if not found
